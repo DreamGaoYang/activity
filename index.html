@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="./src/css/global.css" id="changecss">
+    <link rel="shortcut icon" href="./favicon.ico">
+
+    <style>
+        /* @font-face {
+            font-family: NotoSansHans-Regular;
+            src: url('./src/font/NotoSansHans.otf')
+        } */
+    </style>
+
+    <title>Red Packet</title>
+</head>
+
+<body>
+    <div class="body">
+        <div class="packet_bg">
+            <img src="./src/image/packet_bg.png" alt="" class="img_bg">
+            <img src="./src/image/logo.png" alt="" class="img_logo">
+            <h1>Red Packet from dForce<br />2019 to the Moon</h1>
+
+            <div class="btn">Loading</div>
+
+            <img src="./src/image/not_start.png" alt="" class="not_start">
+            <p class="not_start">The activity is not started yet.</p>
+
+            <img src="./src/image/activity_end.png" alt="" class="activity_end">
+            <p class="activity_end">The activity is closed.</p>
+
+            <img src="./src/image/isopened.png" alt="" class="isopened">
+            <p class="isopened">Red packet is already opened.</p>
+
+            <img src="./src/image/invalid.png" alt="" class="invalid">
+            <p class="invalid">Red packet is invalid.</p>
+        </div>
+
+        <div class="success" style="display: none;">
+            <img src="./src/image/success.png" alt="" class="img_bg">
+
+            <p class="title"><span class="iamBalance">0.00</span> USDx</p>
+            <h1>USDx is claimed, Check your USDx balance in the wallet.</h1>
+
+            <div class="OKbtn">OK</div>
+        </div>
+    </div>
+</body>
+
+<script src="./src/js/jquery.min.js"></script>
+<script src="./src/js/red_static.js"></script>
+<script>
+    $(function () {
+        // R test net
+        var addressRedpacket = '0xFbc81523daD8E8cbBEe03E62A731aa7b35fbb904';
+        var contractRedpacket = web3.eth.contract(redpacketAbi).at(addressRedpacket);
+        var statusStr;
+        var activity;
+        var id;
+        var isClaimimg;
+        // console.log(web3);
+
+
+        if (window.location.href.indexOf('?') > 0) {
+            // console.log(window.location.href.indexOf('?'));
+            statusStr = window.location.href.split('?')[1];
+            activity = '0x' + statusStr.split('&')[0].split('=')[1];
+            id = '0x' + statusStr.split('&')[1].split('=')[1];
+
+            console.log(activity, id);
+
+            contractRedpacket.getActivityState.call(activity, id, (err, ret) => {
+                console.log(err, Number(ret));
+                // 0 NO_ERROR
+                if (Number(ret) === 0) {
+                    $(".btn").html('Claim');
+                }
+                // 1 合约未到达指定开始时间
+                if (Number(ret) === 1) {
+                    $(".btn").css('display', 'none');
+                    $(".not_start").css('display', 'block');
+                }
+                // 2 合约已到达指定结束时间
+                if (Number(ret) === 2) {
+                    $(".btn").css('display', 'none');
+                    $(".activity_end").css('display', 'block');
+                }
+                // 3 合约token红包数量为0
+                if (Number(ret) === 3) {
+                    $(".btn").css('display', 'none');
+                    $(".activity_end").css('display', 'block');
+                }
+                // 4 已经领取完
+                if (Number(ret) === 4) {
+                    $(".btn").css('display', 'none');
+                    $(".isopened").css('display', 'block');
+                }
+                // 5 验证码无效
+                if (Number(ret) === 5) {
+                    $(".btn").css('display', 'none');
+                    $(".invalid").css('display', 'block');
+                }
+            })
+        } else {
+            $(".btn").html('err, try again.');
+        }
+
+        // click to claim
+        $(".btn").click(function () {
+            console.log(111);
+            if ($(".btn").html() != 'Claim') {
+                return;
+            }
+            if (isClaimimg) {
+                return;
+            }
+            isClaimimg = true;
+            contractRedpacket.claim.sendTransaction(
+                activity,
+                id,
+                (err, ret) => {
+                    if (err) {
+                        isClaimimg = false;
+                        $(".btn").html('Claim');
+                    }
+                    if (ret) {
+                        $(".btn").html('Claim…');
+                        var timerOBJ = {};
+                        var tempRnum = Math.random();
+                        timerOBJ[tempRnum] = setInterval(() => {
+                            console.log('i am checking Claim…');
+                            web3.eth.getTransactionReceipt(ret, (err, data) => {
+                                // 处理一下 转钱
+                                // console.log(data.logs[0].data);
+                                if (data && data.status === '0x1') {
+                                    clearInterval(timerOBJ[tempRnum]);
+                                    console.log('Claim USDx success...');
+                                    // $(".iamBalance").html('Claim…');
+                                    var getMoneyOrigin = web3.toBigNumber(data.logs[0].data);
+                                    var getMoney = formatNumber(web3.toBigNumber(data.logs[0].data));
+                                    console.log('***********', getMoneyOrigin, getMoney, '************');
+                                    $(".packet_bg").css('display', 'none');
+                                    $(".success").css('display', 'block');
+                                    $(".iamBalance").html(getMoney);
+                                }
+                                if (data && data.status === '0x0') {
+                                    clearInterval(timerOBJ[tempRnum]);
+                                    console.log('Claim USDx faild');
+                                    $(".btn").html('Claim faild');
+                                }
+                            })
+                        }, 2000);
+                    }
+                }
+            )
+        });
+
+
+        // format number
+        function formatNumber(BNr) {
+            var originStr = '0';
+            if (BNr.toFixed() < (10 ** 15) && BNr.toFixed() > 0) {
+                return '0.00';
+            }
+            originStr = BNr.div(10 ** 18).toString(10);
+            if (originStr.indexOf('.') > 0) {
+                originStr = originStr.substr(0, originStr.indexOf('.') + 3);
+                if (originStr.length >= 12) {
+                    return originStr = originStr.substr(0, 11);
+                } else {
+                    return originStr;
+                }
+            } else if (isNaN(originStr)) {
+                return '0.00'
+            } else {
+                return originStr + '.00';
+            }
+        }
+
+
+        // close
+        $(".OKbtn").click(function () {
+            console.log(111);
+            window.opener = null;
+            window.open('', '_self');
+            window.close();
+        });
+
+
+
+    });
+</script>
+
+</html>
