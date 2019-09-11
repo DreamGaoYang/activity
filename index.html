@@ -9,10 +9,10 @@
     <link rel="shortcut icon" href="./favicon.ico">
 
     <style>
-        /* @font-face {
-            font-family: NotoSansHans-Regular;
+        @font-face {
+            font-family: NotoSansHans;
             src: url('./src/font/NotoSansHans.otf')
-        } */
+        }
     </style>
 
     <title>Red Packet</title>
@@ -128,7 +128,7 @@
                         $(".btn").html('Claim');
                     }
                     if (ret) {
-                        $(".btn").html('Claim…');
+                        $(".btn").html('Claim <span class="span1">.<span><span class="span2">.<span><span class="span3">.<span>');
                         var timerOBJ = {};
                         var tempRnum = Math.random();
                         timerOBJ[tempRnum] = setInterval(() => {
