@@ -23,9 +23,11 @@
         <div class="packet_bg">
             <img src="./src/image/packet_bg.png" alt="" class="img_bg">
             <img src="./src/image/logo.png" alt="" class="img_logo">
-            <h1>Red Packet from dForce<br />2019 to the Moon</h1>
+            <h1>Lucky Money from dForce</h1>
 
             <div class="btn">Loading</div>
+
+            <div class="gastips">Please do not re-submit to avoid duplicate gas consumption.</div>
 
             <img src="./src/image/not_start.png" alt="" class="not_start">
             <p class="not_start">The activity is not started yet.</p>
@@ -119,6 +121,7 @@
                 return;
             }
             isClaimimg = true;
+            $(".gastips").css('display', 'block');
             contractRedpacket.claim.sendTransaction(
                 activity,
                 id,
@@ -126,6 +129,7 @@
                     if (err) {
                         isClaimimg = false;
                         $(".btn").html('Claim');
+                        $(".gastips").css('display', 'none');
                     }
                     if (ret) {
                         $(".btn").html('Claim <span class="span1">.</span><span class="span2">.</span><span class="span3">.</span>');

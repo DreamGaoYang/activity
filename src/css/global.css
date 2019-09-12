@@ -124,6 +124,18 @@ div.packet_bg div.btn {
     font-size: 20px;
 }
 
+div.packet_bg div.gastips {
+    display: none;
+    color: #D4AC7D;
+    font-size: 14px;
+    width: 90%;
+    position: absolute;
+    bottom: 9%;
+    left: 5%;
+    padding: 0 6%;
+    text-align: center;
+}
+
 /*------------------ 分割线 ------------------*/
 img.not_start {
     display: none;
